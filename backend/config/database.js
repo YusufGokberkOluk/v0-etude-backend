@@ -2,15 +2,15 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    // Eski bağlantı dizesi yerine sizinkini kullanıyoruz.
+    // MongoDB Atlas connection string for etudeData cluster
     await mongoose.connect(
-      'mongodb+srv://yusufgoluk:yusufgoluk04@cluster0.nqr9qs0.mongodb.net/notionKlonuDB?retryWrites=true&w=majority&appName=Cluster0',
+      'mongodb+srv://yusufgoluk:pmGMF8aMZHqUpFpu@etudedatacluster.sl6layp.mongodb.net/etudeData?retryWrites=true&w=majority&appName=etudeDataCluster',
       {
         useNewUrlParser: true,
         useUnifiedTopology: true,
       }
     );
-    console.log('MongoDB bağlantısı başarılı.');
+    console.log('MongoDB bağlantısı başarılı - etudeData cluster\'a bağlandı.');
   } catch (error) {
     console.error('MongoDB bağlantı hatası:', error);
     process.exit(1);

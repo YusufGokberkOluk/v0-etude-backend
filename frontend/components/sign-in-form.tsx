@@ -4,11 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-
-const mockUser = {
-  email: "kullanici@etude.app",
-  password: "password123",
-}
+import apiClient from "@/lib/api"
 
 export default function SignInForm() {
   const router = useRouter()
@@ -26,26 +22,29 @@ export default function SignInForm() {
     }
   }, [router])
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     console.log("Sign in attempt", { email, password })
 
-    // Compare input credentials with mock user
-    if (email === mockUser.email && password === mockUser.password) {
-      console.log("Login successful! (Mock)")
+    try {
       setError("")
       setIsRedirecting(true)
 
-      // Set mock login state
-      localStorage.setItem("isLoggedIn", "true")
+      const response = await apiClient.login(email, password)
 
-      // Use Next.js router for navigation
-      setTimeout(() => {
+      if (response.success) {
+        console.log("Login successful!")
+        localStorage.setItem("isLoggedIn", "true")
         router.push("/app")
-      }, 1500)
-    } else {
-      console.log("Login failed! Email or password incorrect. (Mock)")
+      } else {
+        console.log("Login failed!")
+        setError(response.message || "Invalid email or password. Please try again.")
+        setIsRedirecting(false)
+      }
+    } catch (error) {
+      console.error("Login error:", error)
       setError("Invalid email or password. Please try again.")
+      setIsRedirecting(false)
     }
   }
 

@@ -4,9 +4,11 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import apiClient from "@/lib/api"
 
 export default function SignUpForm() {
   const router = useRouter()
+  const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -38,27 +40,38 @@ export default function SignUpForm() {
     return true
   }
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError("")
 
-    if (!email || !password || !confirmPassword) {
+    if (!username || !email || !password || !confirmPassword) {
       setFormError("All fields are required")
       return
     }
 
     if (validatePasswords()) {
-      console.log("Sign up attempt", { email, password })
+      console.log("Sign up attempt", { username, email, password })
       setIsSubmitting(true)
 
-      // Simulate API call
-      setTimeout(() => {
-        setIsSubmitting(false)
+      try {
+        const response = await apiClient.register({
+          username,
+          email,
+          password
+        })
 
-        // In a real app, this would create a user account
-        // For demo purposes, just redirect to sign-in
-        router.push("/sign-in")
-      }, 1500)
+        if (response.success) {
+          console.log("Registration successful:", response.data)
+          router.push("/app")
+        } else {
+          setFormError(response.message || "Registration failed")
+        }
+      } catch (error) {
+        console.error("Registration error:", error)
+        setFormError("Registration failed. Please try again.")
+      } finally {
+        setIsSubmitting(false)
+      }
     }
   }
 
@@ -78,6 +91,23 @@ export default function SignUpForm() {
 
         <form className="mt-6 space-y-5" onSubmit={handleSignUp}>
           <div className="space-y-4">
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-[#13262F]/80 mb-1">
+                Username
+              </label>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                autoComplete="username"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-3 py-2 text-[#13262F] bg-white border border-[#ABD1B5]/40 rounded-md focus:outline-none focus:ring-1 focus:ring-[#79B791] focus:border-[#79B791] text-sm"
+                placeholder="yourusername"
+              />
+            </div>
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-[#13262F]/80 mb-1">
                 Email

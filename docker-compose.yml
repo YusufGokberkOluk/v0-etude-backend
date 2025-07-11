@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  # MongoDB servisi (MongoDB Atlas kullanıyoruz, bu sadece local test için)
+  mongodb:
+    image: mongo:6.0
+    container_name: etude-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: etudeData
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - etude-network
+
+  # Redis servisi
+  redis:
+    image: redis:7-alpine
+    container_name: etude-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - etude-network
+
+  # Backend uygulaması
+  backend:
+    build: ./backend
+    container_name: etude-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      # MongoDB Atlas connection string
+      MONGO_URI: mongodb+srv://yusufgoluk:pmGMF8aMZHqUpFpu@etudedatacluster.sl6layp.mongodb.net/etudeData?retryWrites=true&w=majority&appName=etudeDataCluster
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      ENABLE_RABBITMQ: "false"
+      FRONTEND_URL: http://localhost:3001
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      - mongodb
+      - redis
+      - rabbitmq
+    networks:
+      - etude-network
+
+  # Frontend uygulaması
+  frontend:
+    build: ./frontend
+    container_name: etude-frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:5001/api
+      NODE_ENV: production
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend
+    networks:
+      - etude-network
+
+  # RabbitMQ servisi
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: etude-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: password123
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - etude-network
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  etude-network:
+    driver: bridge 
