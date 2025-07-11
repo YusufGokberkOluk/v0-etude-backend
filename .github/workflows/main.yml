@@ -1,0 +1,56 @@
+# İş akışının adı (GitHub Actions sekmesinde görünecek)
+name: Node.js CI
+
+# Bu iş akışı ne zaman tetiklenecek?
+on:
+  # 'main' branch'ine bir push yapıldığında
+  push:
+    branches: [ "main" ]
+  # Pull request açıldığında da çalıştırılabilir
+  pull_request:
+    branches: [ "main" ]
+
+# Yapılacak işler
+jobs:
+  # 'build' adında bir iş tanımlıyoruz
+  build:
+    # Bu işin çalışacağı sanal makine türü
+    runs-on: ubuntu-latest
+
+    # İşin adımları
+    steps:
+    # 1. Adım: Proje kodunu sanal makineye indir (checkout)
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # 2. Adım: Node.js'i kur
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm' # npm bağımlılıklarını önbelleğe alarak hızlandır
+        cache-dependency-path: backend/package-lock.json
+
+    # 3. Adım: Backend bağımlılıklarını yükle
+    - name: Install backend dependencies
+      run: npm install
+      working-directory: ./backend # Bu komutun backend klasöründe çalışmasını sağla
+
+    # 4. Adım: Testleri çalıştır (Eğer varsa)
+    # package.json dosyanızda "test" adında bir script olmalı
+    - name: Run tests
+      run: npm test
+      working-directory: ./backend
+      
+    # 5. Adım: Build işlemini yap (Eğer projeniz gerektiriyorsa)
+    # - name: Build the project
+    #   run: npm run build --if-present
+    #   working-directory: ./backend
+
+    # 6. Adım: Deploy (Yayına alma)
+    # Bu kısım, projenizi nereye deploy ettiğinize göre değişir.
+    # Örneğin: AWS, Vercel, Heroku gibi servislere gönderme komutları buraya yazılır.
+    # - name: Deploy to production
+    #   run: |
+    #     echo "Deploying to server..."
+    #     # ssh, scp, rsync veya bulut sağlayıcısının CLI komutları burada kullanılır.
